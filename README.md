@@ -1,7 +1,6 @@
-
 # botapi for padagraph
 
-###simple bot api
+### simple bot api
 
 * create graphs 
 * post nodes & edges 
