@@ -19,7 +19,20 @@ bot = Botagraph(host, key)
 
 ### create graphs
 
+* Graphs are identified by uniq name,
+* You can add a description and some tags , you cal also add an url to embed an image.
 
+``` python 
+gid = "graph_uniq_name"
+g_attrs = {
+    'description': "your descripton",    
+    'image': "http://example.com/yourimage.png",
+    'tags' : ['add', 'some' , 'tags' ]
+}
+
+if not bot.has_graph(gid) :
+    bot.create_graph(gid, g_attrs)
+```
 
 
 
