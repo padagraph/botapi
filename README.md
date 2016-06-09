@@ -1,6 +1,21 @@
 # botapi for padagraph
 
+1. Get you padagraph token from http://padagraph.io/users/me/generate_auth_token
+
 ## BotaGraph / simple bot api for padagraph
+
+### Connect Bot
+
+
+``` python
+from botapi import Botagraph
+
+host = "http://padagraph.io"
+key  = "get your key"
+
+bot = Botagraph(host, key)
+```
+
 
 ### create graphs
 

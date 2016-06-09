@@ -168,7 +168,6 @@ class Botagraph:
                     "image": props.get('image', ""),
                 }
         resp = self.post(url, payload)
-        print url, resp.text
         return resp.json()
 
     def get_node_by_id(self, gid, uuid):
@@ -190,7 +189,6 @@ class Botagraph:
                     'description' : desc,
                     'properties': { k: v.as_dict() for k,v in properties.iteritems() }
                   }
-        print payload
         resp = self._post_one( "nodetype", gid, payload )
 
         return resp['uuid']
