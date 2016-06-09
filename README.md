@@ -1,11 +1,29 @@
 # botapi for padagraph
 
-### simple bot api
+## BotaGraph / simple bot api for padagraph
 
-* create graphs 
-* post nodes & edges 
+### create graphs
 
-* listen for events on graphs 
+
+
+
+
+### post nodes & edges 
+
+
+
+
+
+
+
+
+
+## BotIO / listen for events on graphs 
+
+### Events
+
+
+
 
 ``` python 
 

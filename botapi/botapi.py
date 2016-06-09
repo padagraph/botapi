@@ -3,6 +3,12 @@
 import requests
 import json
 from itertools import islice
+import logging
+import time
+
+log = logging.getLogger(__name__)
+
+
 """ simple botapi to post graph """
 
 class BotError(Exception):
@@ -20,7 +26,7 @@ class BotApiError(BotError):
         #self.json = response.json()
         message = "\n".join( [self.message,  url, str(data)])
         error = response.text
-        print "!! ERROR !! ", error
+        log.error( "!! ERROR !! %s", str(error) )
         Exception.__init__(self, message) 
         
 class BotLoginError(BotError):
@@ -34,6 +40,25 @@ def gen_slice(gen, chunksize):
         if chunks == []:
             break
         yield chunks
+
+def http_retry(f):
+    def _http_meth(*args, **kwargs):
+        max_retry = 5
+        wait  = 1 #seconds
+        for i in range(max_retry+1):
+            try:
+                return f(*args, **kwargs)
+            # Work around https://github.com/kennethreitz/requests/issues/2364
+            except requests.exception.ConnectionError as e:
+                if i == max_retry:
+                    log.error("ERROR MAX_RETRY %s", str(e))
+                    raise e
+                log.warn("%s When requesting server; retrying... in %ss", str(e))
+                time.sleep(wait)
+                
+    return _http_meth
+
+    
 
 class Botagraph:
     headers={'Content-Type': 'application/json'}
@@ -72,16 +97,20 @@ class Botagraph:
             raise BotApiError(url, payload, resp)
 
         return resp
-        
+
+    @http_retry
     def post(self, url, payload={}):
         return self._send("POST", url, payload)
         
+    @http_retry
     def put(self, url, payload={}):
         return self._send("PUT", url, payload)
         
+    @http_retry
     def get(self, url):
         return self._send("GET", url)
 
+    @http_retry
     def delete(self, url):
         return self._send("DELETE", url)
 
@@ -107,26 +136,6 @@ class Botagraph:
             for i, obj in enumerate(chunks):
                 yield obj, results.get(i, None) 
         
-        
-    def authenticate(self, email, password):
-        """ deprecated """
-        self.key = None
-
-        url = "account/authenticate"
-        payload = { 'email':email, 'password':password }
-
-        resp = self.post(url, payload)
-        
-        print url, payload, resp.text
-            
-        if 200 == resp.status_code:
-            resp = resp.json()  
-            self.key = resp.get('token')
-
-        print ("Authentification OK ")
-
-
-
     def get_schema(self, gid):
         url = "graphs/g/%s/schema" % gid
         resp = self.post(url)
@@ -341,12 +350,6 @@ class Botagraph:
         return resp.json()
 
 
-class Node(object):
-    def __init__(self, nodetype, values=None ):
-        """ Function doc
-        :param : 
-        """
-        self.nodetype = nodetype
         
         
     
