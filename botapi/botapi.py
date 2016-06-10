@@ -49,11 +49,11 @@ def http_retry(f):
             try:
                 return f(*args, **kwargs)
             # Work around https://github.com/kennethreitz/requests/issues/2364
-            except requests.exception.ConnectionError as e:
+            except requests.exceptions.ConnectionError as e:
                 if i == max_retry:
                     log.error("ERROR MAX_RETRY %s", str(e))
                     raise e
-                log.warn("%s When requesting server; retrying... in %ss", str(e))
+                log.warn("%s When requesting server; retrying... in %ss", str(e), wait)
                 time.sleep(wait)
                 
     return _http_meth

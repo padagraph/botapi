@@ -20,7 +20,7 @@ Using the token we will connect to the padagraph api
 
     from botapi import Botagraph
     
-    host = "http://localhost:5000"
+    host = "http://padagraph.io"
     key  = "WyJwQHAuaW8iLCIkMmIkMTIkdC9FUHZkRTF2MVdKeXNWMFh1bjNWLjVwczlKNGNqL2plSWdjZnpramVlYnBOclhjUVRGMXUiXQ.Ch2UxA.L0Ii1JoVYfGoUN1SIi0Ye1MLaU0"
     
     bot = Botagraph(host, key)
@@ -29,7 +29,7 @@ Sample network
 ~~~~~~~~~~~~~~
 
 We will create a simple network of people that know each other \* with
-20 person and ~100 relations
+20 persons and ~100 relations
 
 .. code:: python
 
@@ -131,6 +131,9 @@ faster for big graphs.
    properties.
    In the result you'll get the ``uuid`` of the created node.
 
+Nodes
+^^^^^
+
 .. code:: python
 
     # keep a node index (name, uuid) for relations
@@ -148,6 +151,9 @@ faster for big graphs.
         node = bot.post_node(gid, payload)
         # we keep vids for futur use
         idx[p['name']] = node['uuid']
+
+Edges
+^^^^^
 
 .. code:: python
 
@@ -172,31 +178,3 @@ performances.
 .. code:: python
 
     bot.star_nodes(gid, idx.values())
-
-BotIO / listen for events on graphs
------------------------------------
-
-Events
-~~~~~~
-
-.. code:: python
-
-    
-    from botapi import Botio
-    
-    io = Botio(host=args.host, port=args.port)
-    
-    def wrap(e):
-        def log(*args):
-            print e, args
-        return log
-    
-    
-    io.listenTo(args.gid)
-    for event in Botio.events:
-        io.on(event, wrap(event) )
-            
-    print "botio is listening to %s @ %s:%s" % ( args.gid, args.host, args.port )
-    
-    io.socket.wait()
-
