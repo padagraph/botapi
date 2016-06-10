@@ -8,8 +8,9 @@
 
 ## BotaGraph / simple bot api for padagraph
 
-botagraph.rst
+[botagraph.rst](./botagraph.rst)
+
 
 ## BotIO / listen for events on graphs 
 
-botio.rst
+[botio.rst](./botio.rst)
