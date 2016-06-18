@@ -100,18 +100,22 @@ class Botagraph:
 
     @http_retry
     def post(self, url, payload={}):
+        """ http POST request """
         return self._send("POST", url, payload)
         
     @http_retry
     def put(self, url, payload={}):
+        """ http PUT request """
         return self._send("PUT", url, payload)
         
     @http_retry
     def get(self, url):
+        """ http GET request """
         return self._send("GET", url)
 
     @http_retry
     def delete(self, url):
+        """ http DELETE request """
         return self._send("DELETE", url)
 
     def _post_one(self, obj_type, gid, payload):
@@ -151,6 +155,10 @@ class Botagraph:
 
         
     def get_graph(self, gid):
+        """
+        get graph infos
+        :param gid: graph name
+        """
         url = "graphs/g/%s" % (gid)
         try : 
             resp = self.get(url)
@@ -160,6 +168,19 @@ class Botagraph:
             return None
 
     def create_graph(self, gid, props):
+        """ create a new graph
+        :param gid: graph name
+        :param props: graph properties
+        
+        supported properties are :
+        
+            properties = {
+                'description': "your descripton",    
+                'image': "http://example.com/yourimage.png",
+                'tags' : ['add', 'some' , 'tags' ]
+            }
+
+        """
 
         url = "graphs/create"
         payload = { "name": gid,
@@ -181,10 +202,25 @@ class Botagraph:
         return resp.json()
         
     def create_nodetype(self, gid, name, desc,  properties):
+        """
+        creates an nodetype for a graph
+        :param gid: graph uniq name
+        :param name: nodetype name
+        :param desc: nodetype description
+        :param properties: nodetype properties
+            from reliure.types import Text, Numeric 
+            properties = {
+                "label" : Text()
+                "age"   : Numeric()
+            }
+            
+        :returns : created nodetype uuid
+         """
         return self.post_nodetype( gid, name, desc,  properties)
         
 
     def post_nodetype(self, gid, name, desc,  properties):
+         
         payload = { 'name': name,
                     'description' : desc,
                     'properties': { k: v.as_dict() for k,v in properties.iteritems() }
@@ -193,7 +229,34 @@ class Botagraph:
 
         return resp['uuid']
         
+    def create_nodetype(self, gid, name, desc,  properties):
+        """
+        creates an edgetype for a graph
+        :param gid: graph uniq name
+        :param name: edgetype name
+        :param desc: edgetype description
+        :param properties: edgetype properties
+
+            from reliure.types import Text, Numeric 
+            properties = {
+                "label" : Text()
+                "value" : Numeric()
+            }
+            
+        :returns : created edgetype uuid
+         """
+        return self.post_edgetype( gid, name, desc,  properties)
+
+
     def post_edgetype(self, gid, name, desc,  properties):
+        """
+        creates an edgetype for a graph
+        :param gid: graph uniq name
+        :param name: edge type name
+        :param name: edge type description
+        :param name: edge type properties
+        :returns : created edgetype uuid
+        """
         payload = { 'name' : name,
                     'description': desc,
                     'properties': { k: v.as_dict() for k,v in properties.iteritems() }
@@ -204,31 +267,68 @@ class Botagraph:
         return resp['uuid']
         
     def post_edge(self, gid, payload):
+        """
+        creates an edge in a graph
+        :param gid: graph uniq name
+        :param payload: edge data
+          payload = {
+            'edgetype': uuid , # edgetype uuid,
+            'source': src , # node src uuid
+            'target': tgt , # node target uuid
+            'properties': {'any' : "prop" }
+          }
+        :returns : created edgetype uuid
+        """
         return self._post_one( "edge", gid, payload )
 
     def post_edges(self, gid, edges ):
+        """ bulk insert edges """
         for v in self._post_multi("edges", gid, edges ):
             yield v
 
     
     def delete_edge(self, gid, eid):
+        """ delete a ede from a graph
+        :param gid: graph gid
+        :param eid: edge uuid
+        """ 
         url = "graphs/g/%s/edge/%s" % (gid, eid)
         self.delete(url)
         
 
     def post_node(self, gid, payload):
+        """
+        create a node in a graph
+        :param gid: graph gid
+        :param payload: node payload
+            payload = {
+                'nodetype': uuid, # node type uuid 
+                'properties': { 'label' : 'foo' , 'a' : 2 ... } node properties
+             }
+            Mind that only `label` properties are searchable and use in graph visualiation !!
+        """
         return self._post_one( "node", gid, payload )
          
 
     def post_nodes(self, gid, nodes ):
+        """ bulk nodes insertions """
         for v in self._post_multi("nodes", gid, nodes ):
             yield v
         
     def delete_node(self, gid, nid):
+        """ delete a node from a graph
+        :param gid: graph gid
+        :param nid: node uuid
+        """ 
         url = "graphs/g/%s/node/%s" % (gid, nid)
         self.delete(url)
       
     def star_nodes(self, gid, nodes_uuids ):
+        """
+        stars nodes , starred node with be first shown when visitor access a graph
+        :param gid: graph name
+        :param nodes_uuids: nodes uuids
+        """
         url = "graphs/g/%s/nodes/star" % (gid)
         payload = {
             "nodes": nodes_uuids
@@ -237,6 +337,11 @@ class Botagraph:
         return resp.json()
     
     def unstar_nodes(self, gid, nodes_uuids ):
+        """
+        unstars nodes 
+        :param gid: graph name
+        :param nodes_uuids: nodes uuids to unstar
+        """
         url = "graphs/g/%s/nodes/unstar" % (gid)
         payload = {
             "nodes": nodes_uuids
@@ -313,15 +418,14 @@ class Botagraph:
         
     def count_neighbors(self, gid, node ):
         """ Function doc
-        :param : 
+        :param gid: graph gid
+        :param node: node uuid 
         """
         url = "graphs/g/%s/node/%s/neighbors/count" % (gid, node)
         resp = self.post(url, {})
         return resp.json()['neighbors']
 
   
-    
-
     def prox(self, graph, pzeros, weights=[], filter_edges=[], filter_nodes=[], step=3, limit=100):
         url = "graphs/g/%s/proxemie" % graph
         payload =  {
@@ -338,6 +442,12 @@ class Botagraph:
         return resp.json()
 
     def get_subgraph(self, gid, nodes_uuids):
+        """
+        extract subgraph from node uuids
+        :param gid: graph gid
+        :param nodes_uuids: list of node uuids
+        :returns : serialized graph in json
+        """
         url = "graphs/g/%s/subgraph" % gid
         payload =  {
             'graph' : gid,
