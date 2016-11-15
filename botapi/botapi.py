@@ -27,6 +27,7 @@ class BotApiError(BotError):
         message = "\n".join( [self.message,  url, str(data)])
         error = response.text
         log.error( "!! ERROR !! %s", str(error) )
+        print error
         Exception.__init__(self, message) 
         
 class BotLoginError(BotError):
@@ -82,13 +83,25 @@ class Botagraph:
         headers = {"Authorization" : self.key}
 
         if method == "GET":
+            if self.verbose :
+                print("\n == GET ==", url, "\n", headers)
             resp = requests.get(url, headers=headers)
         if method == "DELETE":
+            if self.verbose :
+                print("\n == DELETE ==", url, "\n", headers)
             resp = requests.delete(url, headers=headers)
         if method == "POST":
+            headers['Content-Type'] = 'application/json'
+            if self.verbose :
+                print("\n == POST ==", url, "\n", headers, payload)
             resp = requests.post(url, json=payload, headers=headers)
         if method == "PUT":
+            if self.verbose :
+                print("\n == PUT ==", url, "\n", headers, payload)
             resp = requests.put(url, data=payload, headers=headers)
+
+        if self.verbose :
+            print( "\n == RESP ==", resp.status_code , "\n",resp.headers,"\n", resp.text)
         
         if 401 == resp.status_code:
             raise BotLoginError('Invalid credentials') 
@@ -122,6 +135,9 @@ class Botagraph:
         url = "graphs/g/%s/%s" % (gid, obj_type)
         resp = self.post(url, payload)
         
+        if self.verbose:
+            print "POST %s, %s " % (url,payload)
+
         return resp.json()
 
     def _post_multi(self, obj_type, gid, objs ):
@@ -148,7 +164,7 @@ class Botagraph:
     def has_graph(self, gid):
         g = self.get_graph(gid)
         try : 
-            g['name']
+            name = g['name']
             return True
         except:
             return False
@@ -190,6 +206,13 @@ class Botagraph:
                 }
         resp = self.post(url, payload)
         return resp.json()
+
+
+    def delete_graph(self, gid):
+        url = "graphs/g/%s" % (gid)
+        resp = self.delete(url)
+        return resp.json()
+        
 
     def get_node_by_id(self, gid, uuid):
         url = "graphs/g/%s/node/%s" % (gid, uuid)
@@ -330,11 +353,11 @@ class Botagraph:
         :param nodes_uuids: nodes uuids
         """
         url = "graphs/g/%s/nodes/star" % (gid)
-        payload = {
-            "nodes": nodes_uuids
-        }
-        resp = self.post(url, payload)
-        return resp.json()
+        for chunks in gen_slice(iter(nodes_uuids), 100):
+            payload = {
+                "nodes": chunks
+            }
+            resp = self.post(url, payload)
     
     def unstar_nodes(self, gid, nodes_uuids ):
         """

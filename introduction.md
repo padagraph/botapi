@@ -4,17 +4,17 @@ botapi for padagraph
 
 ## Graph creation
 
-Graphs are made of `nodes` and `edges`.
+Graphs contains `nodes` and `edges`.
 
 ###  Typed nodes and edges
     
 For any graph we will create a set ``nodetype`` and ``edgetype``
 
     * Nodetype and edgetypes contains properties
+      Each property has a name, is  typed and contains a value.  
+      A `type` is not limited in properties.
 
-      Property has a name, is  typed and contains a value.  
       Currrently ``Text`` and ``Numeric`` types are available.
-      
 
     * Edges and nodes are extended form a `type`,
       and contains a value for each property defined by it's type.
@@ -40,3 +40,6 @@ For any graph we will create a set ``nodetype`` and ``edgetype``
          This property is used as label for edge in visualisation
          If none is set the edgetype label will be used.
          ex:  a property `label ` is of type `Text` and has a value `friend`
+
+
+## Exploration
