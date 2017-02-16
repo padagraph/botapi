@@ -208,10 +208,13 @@ class Botagraph:
         return resp.json()
 
 
-    def delete_graph(self, gid):
+    def delete_graph(self, gid, silent=False):
         url = "graphs/g/%s" % (gid)
-        resp = self.delete(url)
-        return resp.json()
+        try : 
+            resp = self.delete(url)
+            return resp.json()
+        except BotApiError as e:
+            raise
         
 
     def get_node_by_id(self, gid, uuid):
@@ -250,7 +253,7 @@ class Botagraph:
                   }
         resp = self._post_one( "nodetype", gid, payload )
 
-        return resp['uuid']
+        return resp
         
     def create_nodetype(self, gid, name, desc,  properties):
         """
@@ -287,7 +290,7 @@ class Botagraph:
                    
         resp = self._post_one( "edgetype", gid, payload )
         
-        return resp['uuid']
+        return resp
         
     def post_edge(self, gid, payload):
         """
