@@ -5,6 +5,9 @@ import json
 from itertools import islice
 import logging
 import time
+from cello.graphs import GraphBuilder 
+
+
 
 log = logging.getLogger(__name__)
 
@@ -27,13 +30,13 @@ class BotApiError(BotError):
         message = "\n".join( [self.message,  url, str(data)])
         error = response.text
         log.error( "!! ERROR !! %s", str(error) )
-        print error
+        print( error )
         Exception.__init__(self, message) 
         
 class BotLoginError(BotError):
-    def __init__(self, message):
+    def __init__(self, message, host):
         super(BotLoginError, self).__init__(message)
-    
+        self.host = host
 
 def gen_slice(gen, chunksize):
     while True:    
@@ -58,12 +61,11 @@ def http_retry(f):
                 time.sleep(wait)
                 
     return _http_meth
+          
 
-    
-
-class Botagraph:
+class Botagraph(object):
     headers={'Content-Type': 'application/json'}
-    
+        
     def __init__(self, host="http://localhost:5000", key=None, verbose=False):
         self.host = host
         self.verbose = verbose
@@ -104,7 +106,7 @@ class Botagraph:
             print( "\n == RESP ==", resp.status_code , "\n",resp.headers,"\n", resp.text)
         
         if 401 == resp.status_code:
-            raise BotLoginError('Invalid credentials') 
+            raise BotLoginError('Invalid credentials', self.host) 
 
         elif resp.status_code != 200:
             raise BotApiError(url, payload, resp)
@@ -136,7 +138,7 @@ class Botagraph:
         resp = self.post(url, payload)
         
         if self.verbose:
-            print "POST %s, %s " % (url,payload)
+            print( "POST %s, %s " % (url,payload) )
 
         return resp.json()
 
@@ -146,7 +148,7 @@ class Botagraph:
             payload = { "%s" % obj_type: chunks }
             #
             if self.verbose:
-                print "POST %s, %s " % (url,len(chunks))
+                print( "POST %s, %s " % (url,len(chunks)) )
 
             resp = self.post(url, payload)
 
@@ -164,8 +166,7 @@ class Botagraph:
     def has_graph(self, gid):
         g = self.get_graph(gid)
         try : 
-            name = g['name']
-            return True
+            return "properties" in g
         except:
             return False
 
@@ -208,7 +209,7 @@ class Botagraph:
         return resp.json()
 
 
-    def delete_graph(self, gid, silent=False):
+    def delete_graph(self, gid):
         url = "graphs/g/%s" % (gid)
         try : 
             resp = self.delete(url)
@@ -485,5 +486,101 @@ class Botagraph:
 
 
         
-        
+
+class BotaIgraph(Botagraph):
     
+    def __init__(self):
+
+        super(BotaIgraph, self).__init__(key=None)
+        self.builder = GraphBuilder()
+        
+    def delete_graph(self, gid):
+        pass
+    def star_nodes(self, gid , nodes):
+        pass
+
+    def has_graph(self, gid):
+        return True
+
+    def get_graph(self, gid):
+        return self.get_schema(gid)
+        
+    def get_schema(self, gid):
+        return {
+            'graph' : gid,
+            'schema' : { 'nodetypes' : [],
+                         'edgetypes' : []
+                       }
+        }
+        
+    def create_graph(self, gid, props):
+        attributes = {
+            'graph' : gid,
+            'gid' : gid,
+            'nodetypes' : [] ,
+            'edgetypes' : [] ,
+            'properties': props
+            }
+        self.builder.set_gattrs( **attributes )
+        
+        for e in ["uuid","edgetype","properties"]:
+            self.builder.declare_eattr(e)
+        for e in ["uuid","nodetype","properties"]:
+            self.builder.declare_vattr(e)
+
+        self.builder.reset()
+        
+        return gid
+    
+    def post_nodetype(self, gid, name, desc,  properties):
+        types = self.builder._graph_attrs['nodetypes']
+        return self._post_type( types, gid, name, desc,  properties)
+        
+    def post_edgetype(self, gid, name, desc,  properties):
+        types = self.builder._graph_attrs['edgetypes']
+        return self._post_type( types, gid, name, desc,  properties)
+        
+    def _post_type(self, types, gid, name, desc,  properties):
+        payload = {
+            'uuid': "_%s_%s" %(gid, name),
+            'uniq_key': "_%s_%s" %(gid, name),
+            'name': name,
+            'description' : desc,
+            'properties': { k: v.as_dict() for k,v in properties.iteritems() }
+        }
+        types.append(payload)
+        return payload
+        
+    def post_nodes(self, gid, nodes ):
+        for node in nodes:
+            #     !!!
+            padid = node['properties'].get('id', node['properties']['label'])
+            uuid = self.builder.add_get_vertex(padid)
+            
+            node['uuid'] = str(uuid)
+            self.builder.set_vattr(uuid, 'uuid', node['uuid'])
+            self.builder.set_vattr(uuid, 'nodetype', node['nodetype'])
+            self.builder.set_vattr(uuid, 'properties', node['properties'])
+            yield node, uuid
+            
+    def post_edges(self, gid, edges ):
+        
+        for edge in edges:
+            uuid = self.builder.add_get_edge(edge['source'], edge['target'])
+            edge['uuid'] = uuid
+            self.builder.set_eattr(uuid, 'uuid', uuid)
+            self.builder.set_eattr(uuid, 'edgetype', edge['edgetype'])
+            self.builder.set_eattr(uuid, 'properties', edge['properties'])
+            yield edge, uuid
+
+    def get_igraph(self):
+        graph = self.builder.create_graph()
+        graph['meta'] = {
+            'node_count': graph.vcount(),
+            'edge_count': graph.ecount(),
+            'owner': "-",
+            'star_count': 0,
+            'upvotes': 0,
+            'votes': 0
+        }
+        return graph

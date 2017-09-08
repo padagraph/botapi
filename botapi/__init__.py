@@ -3,10 +3,10 @@
 =================
 """
 
-from botapi import Botagraph, BotApiError
+from botapi import Botagraph, BotaIgraph, BotApiError, BotLoginError
 from botio import Botio
 
-__all__ =  ["Botagraph", "BotApiError", "Botio"]
+__all__ =  ["Botagraph", "BotaIgraph", "BotLoginError","BotApiError", "Botio"]
 
 def arg_bot_parser():
     parser = argparse.ArgumentParser()
