@@ -489,10 +489,10 @@ class Botagraph(object):
 
 class BotaIgraph(Botagraph):
     
-    def __init__(self):
+    def __init__(self, directed=False):
 
         super(BotaIgraph, self).__init__(key=None)
-        self.builder = GraphBuilder()
+        self.builder = GraphBuilder(directed=directed)
         
     def delete_graph(self, gid):
         pass
