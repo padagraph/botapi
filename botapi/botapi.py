@@ -77,7 +77,9 @@ class Botagraph(object):
             resp = self.get(url)
             
     def _send(self, method, url, payload={}):
-    
+
+        print "[%s] %s" % (method , url)
+        
         if self.key is None:
             raise BotLoginError("I miss a valid authentification token")
 
@@ -308,7 +310,7 @@ class Botagraph(object):
         """
         return self._post_one( "edge", gid, payload )
 
-    def post_edges(self, gid, edges ):
+    def post_edges(self, gid, edges, **kwargs ):
         """ bulk insert edges """
         for v in self._post_multi("edges", gid, edges ):
             yield v
@@ -563,10 +565,12 @@ class BotaIgraph(Botagraph):
             self.builder.set_vattr(uuid, 'properties', node['properties'])
             yield node, uuid
             
-    def post_edges(self, gid, edges ):
+    def post_edges(self, gid, edges , extra=None):
+
+        if extra == None : extra = lambda x : ""
         
         for edge in edges:
-            uuid = self.builder.add_get_edge(edge['source'], edge['target'])
+            uuid = self.builder.add_get_edge(edge['source'], edge['target'], extra=extra(edge))
             edge['uuid'] = uuid
             self.builder.set_eattr(uuid, 'uuid', uuid)
             self.builder.set_eattr(uuid, 'edgetype', edge['edgetype'])
