@@ -8,10 +8,10 @@ readme = open(os.path.join(cwd, 'README.md')).read()
 
 setup(
     name='botapi',
-    version='r1.1.1',
+    version='1.1.2',
     description="Minimal framework to manage data in padagraph.io",
     long_description=readme,
-    author='KodexLab',
+    author='a-tsioh, ynnk',
     author_email='api@padagraph.io',
     url='http://padagraph.io',
     packages=['botapi'] + ['botapi.%s' % submod for submod in find_packages('botapi')],

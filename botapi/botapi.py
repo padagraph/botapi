@@ -545,7 +545,7 @@ class BotaIgraph(Botagraph):
     def _post_type(self, types, gid, name, desc,  properties):
         payload = {
             'uuid': "_%s_%s" %(gid, name),
-            'uniq_key': "_%s_%s" %(gid, name),
+            '_uniq_key': "_%s_%s" %(gid, name),
             'name': name,
             'description' : desc,
             'properties': { k: v.as_dict() for k,v in properties.iteritems() }
@@ -577,7 +577,7 @@ class BotaIgraph(Botagraph):
             self.builder.set_eattr(uuid, 'properties', edge['properties'])
             yield edge, uuid
 
-    def get_igraph(self):
+    def get_igraph(self, weight_prop=None):
         graph = self.builder.create_graph()
         graph['meta'] = {
             'node_count': graph.vcount(),
@@ -587,4 +587,9 @@ class BotaIgraph(Botagraph):
             'upvotes': 0,
             'votes': 0
         }
+
+        if weight_prop :
+            graph.es['weight'] = [ float(e['properties'].get(weight_prop, 1.)) for e in graph.es ]
+
+        
         return graph
