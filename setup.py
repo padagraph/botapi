@@ -8,7 +8,7 @@ readme = open(os.path.join(cwd, 'README.md')).read()
 
 setup(
     name='botapi',
-    version='1.1.2',
+    version='1.1.3',
     description="Minimal framework to manage data in padagraph.io",
     long_description=readme,
     author='a-tsioh, ynnk',
