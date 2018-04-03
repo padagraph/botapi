@@ -498,8 +498,11 @@ class BotaIgraph(Botagraph):
         
     def delete_graph(self, gid):
         pass
-    def star_nodes(self, gid , nodes):
-        pass
+
+    def star_nodes(self, gid , uuids):
+        starred = self.builder._graph_attrs['starred']
+        for e in uuids :
+            starred.add(e)
 
     def has_graph(self, gid):
         return True
@@ -521,6 +524,7 @@ class BotaIgraph(Botagraph):
             'gid' : gid,
             'nodetypes' : [] ,
             'edgetypes' : [] ,
+            'starred' : set() ,
             'properties': props
             }
         self.builder.set_gattrs( **attributes )
@@ -553,10 +557,19 @@ class BotaIgraph(Botagraph):
         types.append(payload)
         return payload
         
-    def post_nodes(self, gid, nodes ):
+    def post_nodes(self, gid, nodes, key=None ):
+        if callable(key): 
+            fkey = key
+        elif type(key) == list:
+            fkey = lambda props : "%s" % ("".join([ props[k] for k in key  ]))
+        elif type(key) == list:
+            fkey = lambda props : "%s" % ("".join([ props[k] for k in [key]  ]))
+        else :
+            fkey = lambda props : "%s" %  props['label']
+
         for node in nodes:
             #     !!!
-            padid = node['properties'].get('id', node['properties']['label'])
+            padid = fkey(node['properties'])
             uuid = self.builder.add_get_vertex(padid)
             
             node['uuid'] = str(uuid)
@@ -583,7 +596,7 @@ class BotaIgraph(Botagraph):
             'node_count': graph.vcount(),
             'edge_count': graph.ecount(),
             'owner': "-",
-            'star_count': 0,
+            'star_count': len( graph['starred'] ),
             'upvotes': 0,
             'votes': 0
         }
