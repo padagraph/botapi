@@ -2,11 +2,16 @@
 """:mod:`botapi`
 =================
 """
+try:
 
-from botapi import Botagraph, BotaIgraph, BotApiError, BotLoginError
-from botio import Botio
+    from botapi import Botagraph, BotaIgraph, BotApiError, BotLoginError
+    from botio import Botio
+
+except :
+    from botapi.botapi import Botagraph, BotaIgraph, BotApiError, BotLoginError
 
 __all__ =  ["Botagraph", "BotaIgraph", "BotLoginError","BotApiError", "Botio"]
+
 
 def arg_bot_parser():
     parser = argparse.ArgumentParser()

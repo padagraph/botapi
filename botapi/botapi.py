@@ -78,7 +78,7 @@ class Botagraph(object):
             
     def _send(self, method, url, payload={}):
 
-        print "[%s] %s" % (method , url)
+        print( "[%s] %s" % (method , url))
         
         if self.key is None:
             raise BotLoginError("I miss a valid authentification token")
@@ -248,11 +248,12 @@ class Botagraph(object):
         return self.post_nodetype( gid, name, desc,  properties)
         
 
-    def post_nodetype(self, gid, name, desc,  properties):
-         
+    def post_nodetype(self, gid, name, desc,  properties, attributes=None):
+        if attributes == None : attributes = {}
         payload = { 'name': name,
                     'description' : desc,
-                    'properties': { k: v.as_dict() for k,v in properties.iteritems() }
+                    'properties': { k: v.as_dict() for k,v in properties.items() },
+                    'type_attributes' : attributes,
                   }
         resp = self._post_one( "nodetype", gid, payload )
 
@@ -277,18 +278,21 @@ class Botagraph(object):
         return self.post_edgetype( gid, name, desc,  properties)
 
 
-    def post_edgetype(self, gid, name, desc,  properties):
+    def post_edgetype(self, gid, name, desc,  properties, attributes=None):
         """
         creates an edgetype for a graph
         :param gid: graph uniq name
         :param name: edge type name
         :param name: edge type description
         :param name: edge type properties
+        :param name: edge type attributes   
         :returns : created edgetype uuid
         """
+        if attributes == None : attributes = {}
         payload = { 'name' : name,
                     'description': desc,
-                    'properties': { k: v.as_dict() for k,v in properties.iteritems() }
+                    'properties': { k: v.as_dict() for k,v in properties.items() },
+                    'type_attributes': attributes
                   }
                    
         resp = self._post_one( "edgetype", gid, payload )
@@ -538,32 +542,38 @@ class BotaIgraph(Botagraph):
         
         return gid
     
-    def post_nodetype(self, gid, name, desc,  properties):
+    def post_nodetype(self, gid, name, desc,  properties=None, attributes=None):
         types = self.builder._graph_attrs['nodetypes']
-        return self._post_type( types, gid, name, desc,  properties)
+        return self._post_type( types, gid, name, desc,  properties, attributes)
         
-    def post_edgetype(self, gid, name, desc,  properties):
+    def post_edgetype(self, gid, name, desc,  properties=None, attributes=None):
         types = self.builder._graph_attrs['edgetypes']
-        return self._post_type( types, gid, name, desc,  properties)
+        return self._post_type( types, gid, name, desc,  properties, attributes)
         
-    def _post_type(self, types, gid, name, desc,  properties):
+    def _post_type(self, types, gid, name, desc,  properties, attributes):
+
+        if attributes == None : attributes = {}
+        if properties == None : properties = {}
+
         payload = {
             'uuid': "_%s_%s" %(gid, name),
             '_uniq_key': "_%s_%s" %(gid, name),
             'name': name,
             'description' : desc,
-            'properties': { k: v.as_dict() for k,v in properties.iteritems() }
+            'properties': { k: v.as_dict() for k,v in properties.items() },
+            'type_attributes': attributes
         }
         types.append(payload)
         return payload
         
     def post_nodes(self, gid, nodes, key=None ):
+        if isinstance(key, str):
+            key = [key]
+
         if callable(key): 
             fkey = key
         elif type(key) == list:
-            fkey = lambda props : "%s" % ("".join([ props[k] for k in key  ]))
-        elif type(key) == list:
-            fkey = lambda props : "%s" % ("".join([ props[k] for k in [key]  ]))
+            fkey = lambda props : "%s" % ("".join([ props[k] for k in key ]))
         else :
             fkey = lambda props : "%s" %  props['label']
 
