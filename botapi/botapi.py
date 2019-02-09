@@ -495,9 +495,9 @@ class Botagraph(object):
 
 class BotaIgraph(Botagraph):
     
-    def __init__(self, directed=False):
+    def __init__(self,  directed=False, **kwargs):
 
-        super(BotaIgraph, self).__init__(key=None)
+        super(BotaIgraph, self).__init__( **kwargs)
         self.builder = GraphBuilder(directed=directed)
         
     def delete_graph(self, gid):
